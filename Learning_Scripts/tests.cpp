@@ -19,7 +19,7 @@ int function1() {
 
 int print_and_append() {
   char h1[100];
-  printf("Enter your string: ");
+  printf("Enter your string (without spaces please): ");
   scanf("%99s", h1);
   for (size_t x = 0; x < strlen(h1); x++) {
     for (size_t y = 0; y <= x; y++) {
