@@ -164,6 +164,10 @@ int square_stairs() {
   return 0;
 }
 int main() {
+  function1();
+  listings();
+  coffee_machine();
+  loading_spinner();
   square_stairs();
   return 0;
 }
