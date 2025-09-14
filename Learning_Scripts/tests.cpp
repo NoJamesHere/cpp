@@ -4,24 +4,31 @@
 #include <stdio.h>
 #include <string.h>
 #include <thread>
+#include <vector>
+#include <limits>
+#include <string>
 
 using namespace std;
 
-int function1() {
+void function1() {
   int a, b, c{};
   string hi = "";
   std::cout << "Please enter three values: ";
-  std::cin >> a >> b >> c >> hi;
-
+  std::cin >> a >> b >> c;
+  std::getline(std::cin, hi);  
   for (size_t x = 0; x < hi.length(); x++) {
     std::cout << hi[x] << "\n";
   }
   std::cout << "You entered: " << a << ", " << b << " and " << c << "\n";
-  std::cout << "Btw this is what you entered after: " << hi;
-  return 0;
+  if(!hi.empty()){
+    std::cout << "Btw this is what you entered after: " << hi << endl;
+  }
+  else{
+    cout << "No extra input provided!" << endl;
+  }
 }
 
-int print_and_append() {
+void print_and_append() {
   char h1[100];
   printf("Enter your string (without spaces please): ");
   scanf("%99s", h1);
@@ -31,12 +38,11 @@ int print_and_append() {
     }
     printf("\n");
   }
-  return 0;
 }
 
-int listings() {
+void listings() {
   int input = 0;
-  printf("Please enter a digit: ");
+  printf("\nPlease enter a digit: ");
   int result{};
   int count = 0;
   result = scanf("%d", &input);
@@ -47,50 +53,87 @@ int listings() {
     }
   }
   printf("Printed %d times", count);
-  return 0;
 }
 
-int coffee_machine() {
-  int current_water = 500;
+void coffee_machine() {
   bool running{true};
+  int current_water        = 500;
+  int current_coffee_beans = 1;
   // needed water for types of coffee brews
-  const int water_cost_of_espresso = 30;
-  const int water_cost_of_americano = 180;
+  const int cost_espresso_beans           = 2;
+  const int water_cost_of_espresso        = 30;
+  const int water_cost_of_americano       = 180;
   const int water_cost_of_espresso_doppio = 50;
-
+  string not_enough = "water";
   char input;
-  printf("Enter 'q' to quit\n\n");
+  printf("\n\nEnter 'q' to quit\n\n");
   while (running) {
-    printf("\nCurrently the tank has %d ml of water. \n\n", current_water);
+    printf("\nCurrently the tank has %d ml of water, \nand the machine "
+        "has %d beans left.\n\n", current_water, current_coffee_beans);
     printf("What coffee would you like?\n(e, a, d / espresso, americano, "
            "espresso doppio): ");
     scanf(" %c", &input);
     printf("\n");
     if (input == 'e') {
-      if (current_water >= water_cost_of_espresso) {
+      if ((current_water >= water_cost_of_espresso) && (current_coffee_beans >= cost_espresso_beans)) {
         printf("Here you have your espresso. Enjoy!\n");
         current_water -= water_cost_of_espresso;
+        current_coffee_beans -= cost_espresso_beans;
       } else {
-        printf("Not enough water.. Please refill..\n");
-      }
+        if(current_water < water_cost_of_americano){
+          if(current_coffee_beans < cost_espresso_beans){
+            not_enough = "water and beans";
+          }
+          else{
+          not_enough = "water";
+          }
+        }
+        else{
+        not_enough = "beans";
+        }
+        printf("Not enough %s.. Please refill.. (r)\n", not_enough.c_str());
+      } 
     } else if (input == 'a') {
-      if (current_water >= water_cost_of_americano) {
+      if ((current_water >= water_cost_of_americano) && (current_coffee_beans >= cost_espresso_beans)) {
         printf("Here you have your americano. Enjoy!\n");
         current_water -= water_cost_of_americano;
+        current_coffee_beans -= cost_espresso_beans;
       } else {
-        printf("Not enough water.. Please refill..\n");
-      }
+        if(current_water < water_cost_of_americano && current_coffee_beans < cost_espresso_beans){
+            not_enough = "water and beans"; 
+        }
+        else if (current_water < water_cost_of_americano){
+          not_enough = "water";
+        
+        }
+        else{
+        not_enough = "beans";
+        }
+        printf("Not enough %s.. Please refill... (r)\n", not_enough.c_str());
+      } 
     } else if (input == 'd') {
-      if (current_water >= water_cost_of_espresso_doppio) {
+      if ((current_water >= water_cost_of_espresso_doppio) && (current_coffee_beans >= cost_espresso_beans)) {
         printf("Here you have your espresso doppio. Enjoy!\n");
         current_water -= water_cost_of_espresso_doppio;
+        current_coffee_beans -= cost_espresso_beans;
       } else {
-        printf("Not enough water.. Please refill...\n");
+        if(current_water < water_cost_of_americano && current_coffee_beans < cost_espresso_beans){
+            not_enough = "water and beans"; 
+        }
+        else if (current_water < water_cost_of_americano){
+          not_enough = "water";
+        
+        }
+        else{
+        not_enough = "beans";
+        }
+        printf("Not enough %s.. Please refill... (r)\n", not_enough.c_str());
       }
     } else if (input == 'r') {
       current_water = 500;
-      printf("Refilled your water! Tank's now full! (%d ml)\n\n",
-             current_water);
+      current_coffee_beans = 10;
+      printf("Refilled your water and beans! Tank's now full! (%d ml)\n(%d beans)\n\n",
+             current_water, current_coffee_beans);
 
     } else if (input == 'q') {
       running = false;
@@ -98,10 +141,9 @@ int coffee_machine() {
       printf("Your input '%c' is not a valid option.\n", input);
     }
   }
-  return 0;
 }
 
-int loading_spinner() {
+void loading_spinner() {
   std::random_device rd;
   std::mt19937 gen(rd());
   std::uniform_int_distribution<> dist(100, 300);
@@ -136,10 +178,9 @@ int loading_spinner() {
   }
   printf(
       "\nYou have seen a PoC for animations coded by NoJamesHere. Goodbye.\n");
-  return 0;
 }
 
-int square_stairs() {
+void square_stairs() {
   printf("Square: \n\n");
   std::this_thread::sleep_for(std::chrono::milliseconds(3000));
 
@@ -161,13 +202,27 @@ int square_stairs() {
     printf("\n");
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
   }
-  return 0;
 }
+
+void hello(){
+   std::vector<std::string> phrases{"Any day could be a good day.", "Don't worry, I just pooped myself!", "bodos binted?", "Finally got the name right.."};
+   std::random_device rd;
+   std::mt19937 gen(rd());
+   std::uniform_int_distribution<> dist(0, phrases.size() - 1);
+
+   int random_number = dist(gen);
+   std::cout << "\n\n\n" << phrases[random_number] << endl;
+}
+
+
+
+
 int main() {
   function1();
   listings();
   coffee_machine();
   loading_spinner();
   square_stairs();
+  hello();
   return 0;
 }
