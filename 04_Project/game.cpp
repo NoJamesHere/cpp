@@ -1,53 +1,52 @@
-// important !! this scripts a bit broken and I am way too tired, good luck future me
+// important !! this scripts a bit broken and I am way too tired, good luck
+// future me
 
+#include <algorithm>
 #include <iterator>
 #include <list>
 #include <ncurses.h>
 #include <random>
 #include <string>
 #include <unistd.h>
-#include <algorithm>
 namespace main_program {
-int chips = 0;
-int storage = 0;
 
-int wtfs_leventshtein(std::string& generated, std::string& user_input){
+int wtfs_leventshtein(std::string &generated, std::string &user_input) {
   int n = generated.size();
   int m = user_input.size();
-  std::vector<std::vector<int>> dp(n+1, std::vector<int>(m+1));
+  std::vector<std::vector<int>> dp(n + 1, std::vector<int>(m + 1));
 
-  for(int i=0; i<=n; i++) dp[i][0] = i;
-  for(int j=0; j<=m; j++) dp[0][j] = j;
+  for (int i = 0; i <= n; i++)
+    dp[i][0] = i;
+  for (int j = 0; j <= m; j++)
+    dp[0][j] = j;
 
-  for (int i = 0; i <= n; i++){
-    for (int j = 0; j <= m; j++){
-      if (generated[i-1] == user_input[j-1]){ // wtf is going on here
-        dp[i][j]= dp[i - 1][j - 1];
+  for (int i = 1; i <= n; i++) {
+    for (int j = 1; j <= m; j++) {
+      if (generated[i - 1] == user_input[j - 1]) { // wtf is going on here
+        dp[i][j] = dp[i - 1][j - 1];
       } else {
-        dp[i][j] = 1 + std::min({dp[i-1][j], dp[i][j-1], dp[i-1][j-1]});
+        dp[i][j] = 1 + std::min({dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]});
       }
     }
   }
   return dp[n][m];
 }
 
-double accuracy_calc(std::string& a, std::string& b){
-  int dist = wtfs_leventshtein(a,b);
+double accuracy_calc(std::string &a, std::string &b) {
+  int dist = wtfs_leventshtein(a, b);
   int maxLen = std::max(a.size(), b.size());
+  if (maxLen == 0)
+    return 100.0;
   return 100.0 * (1.0 - (double)dist / maxLen);
 }
-struct listing{
+struct listing {
   std::string name;
   int amount;
 
   static std::vector<listing> all_parts;
 };
 
-std::vector<listing> listing::all_parts = {
-  {"Chips", 0},
-  {"storage", 0}
-};
-
+std::vector<listing> listing::all_parts = {{"Chips", 0}, {"storage", 0}};
 
 int randoms(int lo, int hi) {
   static std::random_device rd;
@@ -84,7 +83,7 @@ std::string sentence_gen() {
 } // Sentence generator
 
 int typing() {
-  
+
   nodelay(stdscr, FALSE);
   const int max_x = getmaxx(stdscr);
   const int max_y = getmaxy(stdscr);
@@ -97,7 +96,7 @@ int typing() {
   move(max_y / 2 + 1, max_x / 2 - sentence.size() / 2);
   int ch;
   while ((ch = getch()) != '\n') {
-    if (ch == KEY_BACKSPACE || ch == 127) {  // my eyes hurt..
+    if (ch == KEY_BACKSPACE || ch == 127) { // my eyes hurt..
       if (!user_input.empty()) {
         user_input.pop_back();
         int x, y;
@@ -114,25 +113,27 @@ int typing() {
   int score;
   double acc = accuracy_calc(user_input, sentence);
 
-  if (acc == 100.0) score = 2;
-  else if (acc >= 80.0 && acc < 100.0) score = 1;
-  else score = 0;
+  if (acc == 100.0)
+    score = 2;
+  else if (acc >= 80.0 && acc < 100.0)
+    score = 1;
+  else
+    score = 0;
 
   if (score == 2) {
-    mvprintw(max_y / 2 + 3, max_x / 2 - 5, "PERFECT!!");
+    mvprintw(max_y / 2 + 3, max_x / 2 - 5, "PERFECT!! (+2)");
   } else if (score == 1) {
     mvprintw(max_y / 2 + 3, max_x / 2 - 5, "Typed: %s", user_input.c_str());
-    mvprintw(max_y / 2 - 5, max_x / 2 - 5, "Failed to manufacture.");
+    mvprintw(max_y / 2 - 5, max_x / 2 - 5,
+             "Manufactured product is corrupt (+1).");
   } else {
     mvprintw(max_y / 2 + 3, max_x / 2 - 5, "Typed: %s", user_input.c_str());
     mvprintw(max_y / 2 - 5, max_x / 2 - 5, "Failed to manufacture.");
-
   }
   refresh();
   getch();
   return score;
 } // Typing game functionality
-
 
 // reset lines
 void resetsomething(int my) { mvprintw(my / 3 - 1, 10, "             "); }
@@ -150,6 +151,8 @@ void main_game() {
       if (i == list_some)
         attron(A_REVERSE);
       mvprintw(row + i, max_x / 2, "%s", listing::all_parts[i].name.c_str());
+      mvprintw(row + i, max_x / 2 + sizeof(listing::all_parts[i].name), "%d",
+               listing::all_parts[i].amount);
       attroff(A_REVERSE);
     }
     mvprintw(max_y / 2 - 5, 10,
@@ -169,15 +172,14 @@ void main_game() {
     case 10:
     case KEY_ENTER:
       int accurate_int = typing();
-      if(accurate_int == 2){
+      if (accurate_int == 2) {
         listing::all_parts[list_some].amount += 2;
-        }
-      else if (accurate_int == 1){
-          listing::all_parts[list_some].amount += 1;
-        }
+      } else if (accurate_int == 1) {
+        listing::all_parts[list_some].amount += 1;
+      }
       break;
-    /*case ERR:
-      break;*/
+      /*case ERR:
+        break;*/
     }
     if (list_some < 0)
       list_some = 0;
@@ -201,11 +203,6 @@ int main() {
   main_program::initializing();
   return 0;
 }
-
-
-
-
-
 
 /*
  * The idea (for now):
