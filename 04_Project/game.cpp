@@ -31,7 +31,7 @@ int wtfs_leventshtein(std::string& generated, std::string& user_input){
   return dp[n][m];
 }
 
-double accuracy_calc(const std::string& a, const std::string& b){
+double accuracy_calc(std::string& a, std::string& b){
   int dist = wtfs_leventshtein(a,b);
   int maxLen = std::max(a.size(), b.size());
   return 100.0 * (1.0 - (double)dist / maxLen);
@@ -176,9 +176,8 @@ void main_game() {
           listing::all_parts[list_some].amount += 1;
         }
       break;
-
-    case ERR:
-      break;
+    /*case ERR:
+      break;*/
     }
     if (list_some < 0)
       list_some = 0;
