@@ -42,15 +42,42 @@ double accuracy_calc(std::string &a, std::string &b) {
 struct listing {
   std::string name;
   int amount;
-
+  bool craft;
   static std::vector<listing> all_parts;
 };
 
-std::vector<listing> listing::all_parts = {{"Circuit Board", 0},
-                                           {"Power Core", 0},
-                                           {"Nano Alloy", 0},
-                                           {"Cooling Module", 0},
-                                           {"Quantum Drive", 0}};
+struct crafting {
+  int indexOfCraftedPart;
+  int indexOfPart1;
+  int indexOfPart2;
+  int amount1;
+  int amount2;
+
+  static std::vector<crafting> recipes;
+};
+
+std::vector<crafting> crafting::recipes = {
+    {5, 0, 1, 4, 6},
+};
+
+std::vector<listing> listing::all_parts = {
+    {"Circuit Board", 0, false}, {"Power Core", 0, false},
+    {"Nano Alloy", 0, false},    {"Cooling Module", 0, false},
+    {"Quantum Drive", 0, false}, {"PART", 0, true},
+};
+
+bool checkItemParts(int recipeIndex) {
+  auto &recipe = crafting::recipes[recipeIndex];
+  auto &part1 = listing::all_parts[recipe.indexOfPart1];
+  auto &part2 = listing::all_parts[recipe.indexOfPart2];
+
+  if (part1.amount >= recipe.amount1 && part2.amount >= recipe.amount2) {
+    part1.amount -= recipe.amount1;
+    part2.amount -= recipe.amount2;
+    return true;
+  }
+  return false;
+} // HELP
 
 int randoms(int lo, int hi) {
   static std::random_device rd;
@@ -140,6 +167,15 @@ int typing() {
 // reset lines
 void resetsomething(int my) { mvprintw(my / 3 - 1, 10, "             "); }
 
+void startTyper(int list_some) {
+  int accurate_int = typing();
+  if (accurate_int == 2) {
+    listing::all_parts[list_some].amount += 2;
+  } else if (accurate_int == 1) {
+    listing::all_parts[list_some].amount += 1;
+  }
+}
+
 void main_game() {
   const int max_x = getmaxx(stdscr);
   const int max_y = getmaxy(stdscr);
@@ -152,8 +188,8 @@ void main_game() {
       if (i == list_some)
         attron(A_REVERSE);
       mvprintw(row + i, max_x / 2, "%s", listing::all_parts[i].name.c_str());
-      mvprintw(row + i, max_x / 2 + sizeof(listing::all_parts[i].name), "%d",
-               listing::all_parts[i].amount);
+      mvprintw(row + i, max_x / 2 + listing::all_parts[i].name.size() + 2, "%d",
+               listing::all_parts[list_some].amount);
       attroff(A_REVERSE);
     }
     mvprintw(max_y / 2 - 5, 10,
@@ -170,14 +206,22 @@ void main_game() {
     case 'q':
       endwin();
       return;
-    case 10:
+    case '\n':
     case KEY_ENTER:
-      int accurate_int = typing();
-      if (accurate_int == 2) {
-        listing::all_parts[list_some].amount += 2;
-      } else if (accurate_int == 1) {
-        listing::all_parts[list_some].amount += 1;
-      }
+      auto &item = listing::all_parts[list_some];
+      if (item.craft) {
+        auto it = std::find_if(
+            crafting::recipes.begin(), crafting::recipes.end(),
+            [&](auto &r) { return r.indexOfCraftedPart == list_some; });
+        if (it != crafting::recipes.end() &&
+            checkItemParts(it - crafting::recipes.begin())) {
+          startTyper(list_some);
+        } else {
+          mvprintw(max_y - 2, 2, "Not enough parts!!");
+          getch();
+        }
+      } else
+        startTyper(list_some);
       break;
       /*case ERR:
         break;*/
