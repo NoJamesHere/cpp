@@ -46,7 +46,11 @@ struct listing {
   static std::vector<listing> all_parts;
 };
 
-std::vector<listing> listing::all_parts = {{"Chips", 0}, {"storage", 0}};
+std::vector<listing> listing::all_parts = {{"Circuit Board", 0},
+                                           {"Power Core", 0},
+                                           {"Nano Alloy", 0},
+                                           {"Cooling Module", 0},
+                                           {"Quantum Drive", 0}};
 
 int randoms(int lo, int hi) {
   static std::random_device rd;
@@ -83,8 +87,6 @@ std::string sentence_gen() {
 } // Sentence generator
 
 int typing() {
-
-  nodelay(stdscr, FALSE);
   const int max_x = getmaxx(stdscr);
   const int max_y = getmaxy(stdscr);
   clear();
@@ -139,7 +141,6 @@ int typing() {
 void resetsomething(int my) { mvprintw(my / 3 - 1, 10, "             "); }
 
 void main_game() {
-  nodelay(stdscr, TRUE);
   const int max_x = getmaxx(stdscr);
   const int max_y = getmaxy(stdscr);
   int list_some = 0;
