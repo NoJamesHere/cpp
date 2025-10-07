@@ -192,7 +192,7 @@ void initializing() {
   initscr();
   noecho();
   curs_set(FALSE);
-  nodelay(stdscr, TRUE);
+  nodelay(stdscr, FALSE);
   keypad(stdscr, TRUE); // enable function keys and arrow keys
   main_game();
 } // end of init
