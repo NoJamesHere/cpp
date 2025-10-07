@@ -189,7 +189,7 @@ void main_game() {
         attron(A_REVERSE);
       mvprintw(row + i, max_x / 2, "%s", listing::all_parts[i].name.c_str());
       mvprintw(row + i, max_x / 2 + listing::all_parts[i].name.size() + 2, "%d",
-               listing::all_parts[list_some].amount);
+               listing::all_parts[i].amount);
       attroff(A_REVERSE);
     }
     mvprintw(max_y / 2 - 5, 10,
@@ -198,10 +198,10 @@ void main_game() {
     int ch = getch();
     switch (ch) {
     case KEY_UP:
-      list_some++;
+      list_some--;
       break;
     case KEY_DOWN:
-      list_some--;
+      list_some++;
       break;
     case 'q':
       endwin();
@@ -217,7 +217,14 @@ void main_game() {
             checkItemParts(it - crafting::recipes.begin())) {
           startTyper(list_some);
         } else {
-          mvprintw(max_y - 2, 2, "Not enough parts!!");
+          auto &ingredient1 = listing::all_parts[it->indexOfPart1];
+          auto &ingredient2 = listing::all_parts[it->indexOfPart2];
+          int amount1 = it->amount1;
+          auto &amount2 = it->amount2;
+          mvprintw(max_y - 5, 2, "Not enough parts!!");
+          mvprintw(max_y - 4, 2, "You need:");
+          mvprintw(max_y - 3, 2, "%s: %d", ingredient1.name.c_str(), amount1);
+          mvprintw(max_y - 2, 2, "%s: %d", ingredient2.name.c_str(), amount2);
           getch();
         }
       } else
