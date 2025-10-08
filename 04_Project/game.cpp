@@ -67,7 +67,10 @@ struct crafting {
 };
 
 std::vector<quest> quest::all_quests = {
-    {"First steps", "Obtain 2 Fusion Cores.", 5, 2, false},
+    {"First steps", "Circuit Boards are fundamental. Craft 2 of them.", 0, 2,
+     false},
+    {"Power", "Obtain 2 Power Cores.", 1, 2, false},
+    {"Fusion what?", "Obtain 2 Fusion Cores.", 5, 2, false},
 };
 
 std::vector<crafting> crafting::recipes = {
@@ -228,7 +231,7 @@ void main_game() {
     int currentQuestCurrentAmount =
         listing::all_parts[currentQuestRequiredPart].amount;
     check_current_quest_completion(currentQuestIndex);
-
+    refresh();
     clear();
     int row = max_y / 2;
     for (int i = 0; i < listing::all_parts.size(); i++) {
@@ -244,8 +247,8 @@ void main_game() {
              "Press Up/Down and hit Enter to manufacture those.. ( (q)uit");
     mvprintw(max_y / 2 - 4, 10, "Complete quest: \"%s\"",
              currentQuestTitle.c_str());
-    mvprintw(max_y / 2 - 3, 10, "\"%s\"", currentQuestDescription.c_str());
-    mvprintw(max_y / 2 - 2, 10, "%d / %d", currentQuestCurrentAmount,
+    mvprintw(max_y / 2 - 2, 10, "\"%s\"", currentQuestDescription.c_str());
+    mvprintw(max_y / 2 - 1, 10, "%d / %d", currentQuestCurrentAmount,
              currentQuestRequiredAmount);
 
     refresh();
