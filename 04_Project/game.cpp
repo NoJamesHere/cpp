@@ -46,6 +46,16 @@ struct listing {
   static std::vector<listing> all_parts;
 };
 
+struct quest {
+  std::string title;
+  std::string description;
+  int requiredPartIndex;
+  int requiredAmount;
+  bool completed;
+
+  static std::vector<quest> all_quests;
+};
+
 struct crafting {
   int indexOfCraftedPart;
   int indexOfPart1;
@@ -56,14 +66,18 @@ struct crafting {
   static std::vector<crafting> recipes;
 };
 
+std::vector<quest> quest::all_quests = {
+    {"First steps", "Obtain 2 Fusion Cores.", 5, 2, false},
+};
+
 std::vector<crafting> crafting::recipes = {
-    {5, 0, 1, 4, 6},
+    {5, 0, 1, 2, 4},
 };
 
 std::vector<listing> listing::all_parts = {
     {"Circuit Board", 0, false}, {"Power Core", 0, false},
     {"Nano Alloy", 0, false},    {"Cooling Module", 0, false},
-    {"Quantum Drive", 0, false}, {"PART", 0, true},
+    {"Quantum Drive", 0, false}, {"Fusion Core", 0, true},
 };
 
 bool checkItemParts(int recipeIndex) {
@@ -176,12 +190,45 @@ void startTyper(int list_some) {
   }
 }
 
+int next_quest() {
+  for (int i = 0; i < quest::all_quests.size(); i++) {
+    if (quest::all_quests[i].completed) {
+      continue;
+    } else {
+      return i;
+    }
+  }
+  return 0;
+}
+
+void check_current_quest_completion(int QuestIndex) {
+  int requiredAmount = quest::all_quests[QuestIndex].requiredAmount;
+  int requiredPartIndex = quest::all_quests[QuestIndex].requiredPartIndex;
+  int currentAmount = listing::all_parts[requiredPartIndex].amount;
+
+  if (currentAmount >= requiredAmount) {
+    quest::all_quests[QuestIndex].completed = true;
+  }
+}
 void main_game() {
   const int max_x = getmaxx(stdscr);
   const int max_y = getmaxy(stdscr);
   int list_some = 0;
   std::string name = "";
+  int currentQuestIndex;
   while (true) {
+    currentQuestIndex = next_quest();
+    std::string currentQuestTitle = quest::all_quests[currentQuestIndex].title;
+    std::string currentQuestDescription =
+        quest::all_quests[currentQuestIndex].description;
+    int currentQuestRequiredPart =
+        quest::all_quests[currentQuestIndex].requiredPartIndex;
+    int currentQuestRequiredAmount =
+        quest::all_quests[currentQuestIndex].requiredAmount;
+    int currentQuestCurrentAmount =
+        listing::all_parts[currentQuestRequiredPart].amount;
+    check_current_quest_completion(currentQuestIndex);
+
     clear();
     int row = max_y / 2;
     for (int i = 0; i < listing::all_parts.size(); i++) {
@@ -192,8 +239,15 @@ void main_game() {
                listing::all_parts[i].amount);
       attroff(A_REVERSE);
     }
-    mvprintw(max_y / 2 - 5, 10,
+
+    mvprintw(max_y / 2 - 7, 10,
              "Press Up/Down and hit Enter to manufacture those.. ( (q)uit");
+    mvprintw(max_y / 2 - 4, 10, "Complete quest: \"%s\"",
+             currentQuestTitle.c_str());
+    mvprintw(max_y / 2 - 3, 10, "\"%s\"", currentQuestDescription.c_str());
+    mvprintw(max_y / 2 - 2, 10, "%d / %d", currentQuestCurrentAmount,
+             currentQuestRequiredAmount);
+
     refresh();
     int ch = getch();
     switch (ch) {
