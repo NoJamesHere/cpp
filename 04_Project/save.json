@@ -1,0 +1,57 @@
+{
+    "parts": [
+        {
+            "amount": 2,
+            "craft": false,
+            "name": "Circuit Board"
+        },
+        {
+            "amount": 0,
+            "craft": false,
+            "name": "Power Core"
+        },
+        {
+            "amount": 0,
+            "craft": false,
+            "name": "Nano Alloy"
+        },
+        {
+            "amount": 0,
+            "craft": false,
+            "name": "Cooling Module"
+        },
+        {
+            "amount": 0,
+            "craft": false,
+            "name": "Quantum Drive"
+        },
+        {
+            "amount": 0,
+            "craft": true,
+            "name": "Fusion Core"
+        }
+    ],
+    "quests": [
+        {
+            "completed": true,
+            "description": "Circuit Boards are fundamental. Craft 2 of them.",
+            "requiredAmount": 2,
+            "requiredPartIndex": 0,
+            "title": "First steps"
+        },
+        {
+            "completed": false,
+            "description": "Obtain 2 Power Cores.",
+            "requiredAmount": 2,
+            "requiredPartIndex": 1,
+            "title": "Power"
+        },
+        {
+            "completed": false,
+            "description": "Obtain 2 Fusion Cores.",
+            "requiredAmount": 2,
+            "requiredPartIndex": 5,
+            "title": "Fusion what?"
+        }
+    ]
+}

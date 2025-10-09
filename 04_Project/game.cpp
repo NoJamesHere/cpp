@@ -1,15 +1,124 @@
-// important !! this scripts a bit broken and I am way too tired, good luck
-// future me
-
 #include <algorithm>
+#include <cstddef>
+#include <fstream>
 #include <iterator>
 #include <list>
 #include <ncurses.h>
+#include <nlohmann/json.hpp>
 #include <random>
 #include <string>
 #include <unistd.h>
-namespace main_program {
+using json = nlohmann::json;
 
+namespace main_program {
+// --- Structs ---
+
+struct listing {
+  std::string name;
+  int amount;
+  bool craft;
+  static std::vector<listing> all_parts;
+};
+
+struct quest {
+  std::string title;
+  std::string description;
+  int requiredPartIndex;
+  int requiredAmount;
+  bool completed;
+
+  static std::vector<quest> all_quests;
+};
+
+struct crafting {
+  int indexOfCraftedPart;
+  int indexOfPart1;
+  int indexOfPart2;
+  int amount1;
+  int amount2;
+
+  static std::vector<crafting> recipes;
+};
+
+// --- Lists & Vectors ---
+
+std::vector<quest> quest::all_quests = {
+    {"First steps", "Circuit Boards are fundamental. Craft 2 of them.", 0, 2,
+     false},
+    {"Power", "Obtain 2 Power Cores.", 1, 2, false},
+    {"Fusion what?", "Obtain 2 Fusion Cores.", 5, 2, false},
+};
+
+std::vector<crafting> crafting::recipes = {
+    {5, 0, 1, 2, 4},
+};
+
+std::vector<listing> listing::all_parts = {
+    {"Circuit Board", 0, false}, {"Power Core", 0, false},
+    {"Nano Alloy", 0, false},    {"Cooling Module", 0, false},
+    {"Quantum Drive", 0, false}, {"Fusion Core", 0, true},
+};
+
+std::list<std::string> words{
+    "somebody", "have",  "time",  "person", "year", "way",   "day",
+    "man",      "thing", "world", "life",   "name", "water", "father",
+    "house",    "story", "book",  "home",   "so",   "very",  "and",
+    "good",     "new",   "first", "last",   "and",  "when",  "friend",
+    "power",    "city",  "a",     "an",     "the",  "their", "want",
+    "look",     "give",  "find",  "work",   "ask",  "seem",  "feel",
+
+};
+
+const int length_words_list = words.size();
+
+// --- Save & Load ---
+
+void save_game() {
+  json data;
+
+  for (const auto &part : listing::all_parts) {
+    data["parts"].push_back(
+        {{"name", part.name}, {"amount", part.amount}, {"craft", part.craft}});
+  }
+
+  for (const auto &q : quest::all_quests) {
+    data["quests"].push_back({{"title", q.title},
+                              {"description", q.description},
+                              {"requiredPartIndex", q.requiredPartIndex},
+                              {"requiredAmount", q.requiredAmount},
+                              {"completed", q.completed}});
+  }
+
+  std::ofstream file("save.json");
+  file << data.dump(4);
+  file.close();
+}
+
+void load_game() {
+  std::ifstream file("save.json");
+  if (!file.is_open())
+    return;
+
+  json data;
+  file >> data;
+  file.close();
+
+  if (data.contains("parts")) {
+    for (size_t i = 0; i < listing::all_parts.size(); i++) {
+      listing::all_parts[i].amount = data["parts"][i]["amount"];
+    }
+  }
+
+  if (data.contains("quests")) {
+    for (size_t i = 0; i < quest::all_quests.size(); i++) {
+      quest::all_quests[i].completed = data["quests"][i]["completed"];
+    }
+  }
+}
+
+// --- Typing Game ---
+
+// Calculating Accuracy
 int wtfs_leventshtein(std::string &generated, std::string &user_input) {
   int n = generated.size();
   int m = user_input.size();
@@ -39,81 +148,14 @@ double accuracy_calc(std::string &a, std::string &b) {
     return 100.0;
   return 100.0 * (1.0 - (double)dist / maxLen);
 }
-struct listing {
-  std::string name;
-  int amount;
-  bool craft;
-  static std::vector<listing> all_parts;
-};
 
-struct quest {
-  std::string title;
-  std::string description;
-  int requiredPartIndex;
-  int requiredAmount;
-  bool completed;
-
-  static std::vector<quest> all_quests;
-};
-
-struct crafting {
-  int indexOfCraftedPart;
-  int indexOfPart1;
-  int indexOfPart2;
-  int amount1;
-  int amount2;
-
-  static std::vector<crafting> recipes;
-};
-
-std::vector<quest> quest::all_quests = {
-    {"First steps", "Circuit Boards are fundamental. Craft 2 of them.", 0, 2,
-     false},
-    {"Power", "Obtain 2 Power Cores.", 1, 2, false},
-    {"Fusion what?", "Obtain 2 Fusion Cores.", 5, 2, false},
-};
-
-std::vector<crafting> crafting::recipes = {
-    {5, 0, 1, 2, 4},
-};
-
-std::vector<listing> listing::all_parts = {
-    {"Circuit Board", 0, false}, {"Power Core", 0, false},
-    {"Nano Alloy", 0, false},    {"Cooling Module", 0, false},
-    {"Quantum Drive", 0, false}, {"Fusion Core", 0, true},
-};
-
-bool checkItemParts(int recipeIndex) {
-  auto &recipe = crafting::recipes[recipeIndex];
-  auto &part1 = listing::all_parts[recipe.indexOfPart1];
-  auto &part2 = listing::all_parts[recipe.indexOfPart2];
-
-  if (part1.amount >= recipe.amount1 && part2.amount >= recipe.amount2) {
-    part1.amount -= recipe.amount1;
-    part2.amount -= recipe.amount2;
-    return true;
-  }
-  return false;
-} // HELP
-
+// Sentence Generator
 int randoms(int lo, int hi) {
   static std::random_device rd;
   static std::mt19937 rng(rd());
   std::uniform_int_distribution<int> dist(lo, hi);
   return dist(rng);
 }
-
-std::list<std::string> words{
-    "somebody", "have",  "time",  "person", "year", "way",   "day",
-    "man",      "thing", "world", "life",   "name", "water", "father",
-    "house",    "story", "book",  "home",   "so",   "very",  "and",
-    "good",     "new",   "first", "last",   "and",  "when",  "friend",
-    "power",    "city",  "a",     "an",     "the",  "their", "want",
-    "look",     "give",  "find",  "work",   "ask",  "seem",  "feel",
-
-};
-
-const int length_words_list = words.size();
 
 std::string sentence_gen() {
   std::string sentence;
@@ -128,19 +170,25 @@ std::string sentence_gen() {
   std::advance(it, number);
   sentence += *it;
   return sentence;
-} // Sentence generator
+}
 
+// Typing Game Logic
 int typing() {
-  const int max_x = getmaxx(stdscr);
-  const int max_y = getmaxy(stdscr);
   clear();
   refresh();
+
+  const int max_x = getmaxx(stdscr);
+  const int max_y = getmaxy(stdscr);
   std::string sentence = sentence_gen();
   std::string user_input;
+  int ch;
+  int score;
+
   mvprintw((max_y / 2), (max_x / 2 - sentence.size() / 2), "%s",
            sentence.c_str());
+
   move(max_y / 2 + 1, max_x / 2 - sentence.size() / 2);
-  int ch;
+
   while ((ch = getch()) != '\n') {
     if (ch == KEY_BACKSPACE || ch == 127) { // my eyes hurt..
       if (!user_input.empty()) {
@@ -156,7 +204,7 @@ int typing() {
     }
     refresh();
   }
-  int score;
+
   double acc = accuracy_calc(user_input, sentence);
 
   if (acc == 100.0)
@@ -176,14 +224,16 @@ int typing() {
     mvprintw(max_y / 2 + 3, max_x / 2 - 5, "Typed: %s", user_input.c_str());
     mvprintw(max_y / 2 - 5, max_x / 2 - 5, "Failed to manufacture.");
   }
+
   refresh();
   getch();
   return score;
-} // Typing game functionality
+}
 
 // reset lines
 void resetsomething(int my) { mvprintw(my / 3 - 1, 10, "             "); }
 
+// Add manufactured amount
 void startTyper(int list_some) {
   int accurate_int = typing();
   if (accurate_int == 2) {
@@ -193,6 +243,24 @@ void startTyper(int list_some) {
   }
 }
 
+// --- Crafting Logic ---
+
+bool checkItemParts(int recipeIndex) {
+  auto &recipe = crafting::recipes[recipeIndex];
+  auto &part1 = listing::all_parts[recipe.indexOfPart1];
+  auto &part2 = listing::all_parts[recipe.indexOfPart2];
+
+  if (part1.amount >= recipe.amount1 && part2.amount >= recipe.amount2) {
+    part1.amount -= recipe.amount1;
+    part2.amount -= recipe.amount2;
+    return true;
+  }
+  return false;
+}
+
+// --- Quest Logic ---
+
+// "What's the next uncompleted quest?"
 int next_quest() {
   for (int i = 0; i < quest::all_quests.size(); i++) {
     if (quest::all_quests[i].completed) {
@@ -213,6 +281,9 @@ void check_current_quest_completion(int QuestIndex) {
     quest::all_quests[QuestIndex].completed = true;
   }
 }
+
+// --- Main Screen ---
+
 void main_game() {
   const int max_x = getmaxx(stdscr);
   const int max_y = getmaxy(stdscr);
@@ -261,6 +332,7 @@ void main_game() {
       list_some++;
       break;
     case 'q':
+      save_game();
       endwin();
       return;
     case '\n':
@@ -303,6 +375,7 @@ void initializing() {
   curs_set(FALSE);
   nodelay(stdscr, FALSE);
   keypad(stdscr, TRUE); // enable function keys and arrow keys
+  load_game();
   main_game();
 } // end of init
 
