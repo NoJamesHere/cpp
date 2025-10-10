@@ -47,16 +47,22 @@ std::vector<quest> quest::all_quests = {
      false},
     {"Power", "Obtain 2 Power Cores.", 1, 2, false},
     {"Fusion what?", "Obtain 2 Fusion Cores.", 5, 2, false},
+    {"Nano Alloy is pretty cool.", "Obtain 2 Nano Alloys", 2, 2, false},
+    {"More Power.", "Obtain 4 Cooling Modules", 3, 4, false},
+    {"We need cooling.", "Obtain 2 Frosted Alloys", 6, 2, false},
+    {"-------", "------", 5, 500, false},
 };
 
 std::vector<crafting> crafting::recipes = {
     {5, 0, 1, 2, 4},
+    {6, 2, 3, 2, 4},
 };
 
 std::vector<listing> listing::all_parts = {
     {"Circuit Board", 0, false}, {"Power Core", 0, false},
     {"Nano Alloy", 0, false},    {"Cooling Module", 0, false},
     {"Quantum Drive", 0, false}, {"Fusion Core", 0, true},
+    {"Frosted Alloy", 0, true},
 };
 
 std::list<std::string> words{
