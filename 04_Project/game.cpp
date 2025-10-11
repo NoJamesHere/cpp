@@ -84,8 +84,10 @@ void save_game() {
   json data;
 
   for (const auto &part : listing::all_parts) {
-    data["parts"].push_back(
-        {{"name", part.name}, {"amount", part.amount}, {"craft", part.craft}});
+    data["parts"].push_back({{"name", part.name},
+                             {"amount", part.amount},
+                             {"craft", part.craft},
+                             {"unlocked", part.unlocked}});
   }
 
   for (const auto &q : quest::all_quests) {
@@ -93,7 +95,8 @@ void save_game() {
                               {"description", q.description},
                               {"requiredPartIndex", q.requiredPartIndex},
                               {"requiredAmount", q.requiredAmount},
-                              {"completed", q.completed}});
+                              {"completed", q.completed},
+                              {"indexOfUnlockedItem", q.indexOfUnlockedItem}});
   }
 
   std::ofstream file("save.json");
@@ -113,6 +116,7 @@ void load_game() {
   if (data.contains("parts")) {
     for (size_t i = 0; i < listing::all_parts.size(); i++) {
       listing::all_parts[i].amount = data["parts"][i]["amount"];
+      listing::all_parts[i].unlocked = data["parts"][i]["unlocked"];
     }
   }
 
