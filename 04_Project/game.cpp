@@ -17,6 +17,7 @@ struct listing {
   std::string name;
   int amount;
   bool craft;
+  bool unlocked;
   static std::vector<listing> all_parts;
 };
 
@@ -26,7 +27,7 @@ struct quest {
   int requiredPartIndex;
   int requiredAmount;
   bool completed;
-
+  int indexOfUnlockedItem;
   static std::vector<quest> all_quests;
 };
 
@@ -44,13 +45,13 @@ struct crafting {
 
 std::vector<quest> quest::all_quests = {
     {"First steps", "Circuit Boards are fundamental. Craft 2 of them.", 0, 2,
-     false},
-    {"Power", "Obtain 2 Power Cores.", 1, 2, false},
-    {"Fusion what?", "Obtain 2 Fusion Cores.", 5, 2, false},
-    {"Nano Alloy is pretty cool.", "Obtain 2 Nano Alloys", 2, 2, false},
-    {"More Power.", "Obtain 4 Cooling Modules", 3, 4, false},
-    {"We need cooling.", "Obtain 2 Frosted Alloys", 6, 2, false},
-    {"-------", "------", 5, 500, false},
+     false, 0},
+    {"Power", "Obtain 2 Power Cores.", 1, 2, false, 5},
+    {"Fusion what?", "Obtain 2 Fusion Cores.", 5, 2, false, 0},
+    {"Nano Alloy is pretty cool.", "Obtain 2 Nano Alloys", 2, 2, false, 0},
+    {"More Power.", "Obtain 4 Cooling Modules", 3, 4, false, 6},
+    {"We need cooling.", "Obtain 2 Frosted Alloys", 6, 2, false, 0},
+    {"-------", "------", 5, 500, false, 0},
 };
 
 std::vector<crafting> crafting::recipes = {
@@ -59,10 +60,10 @@ std::vector<crafting> crafting::recipes = {
 };
 
 std::vector<listing> listing::all_parts = {
-    {"Circuit Board", 0, false}, {"Power Core", 0, false},
-    {"Nano Alloy", 0, false},    {"Cooling Module", 0, false},
-    {"Quantum Drive", 0, false}, {"Fusion Core", 0, true},
-    {"Frosted Alloy", 0, true},
+    {"Circuit Board", 0, false, true}, {"Power Core", 0, false, true},
+    {"Nano Alloy", 0, false, true},    {"Cooling Module", 0, false, true},
+    {"Quantum Drive", 0, false, true}, {"Fusion Core", 0, true, false},
+    {"Frosted Alloy", 0, true, false},
 };
 
 std::list<std::string> words{
@@ -282,9 +283,13 @@ void check_current_quest_completion(int QuestIndex) {
   int requiredAmount = quest::all_quests[QuestIndex].requiredAmount;
   int requiredPartIndex = quest::all_quests[QuestIndex].requiredPartIndex;
   int currentAmount = listing::all_parts[requiredPartIndex].amount;
-
+  int unlockingPart = quest::all_quests[QuestIndex].indexOfUnlockedItem;
+  bool &unlocked = listing::all_parts[unlockingPart].unlocked;
   if (currentAmount >= requiredAmount) {
     quest::all_quests[QuestIndex].completed = true;
+    if (!unlocked) {
+      unlocked = true;
+    }
   }
 }
 
@@ -294,7 +299,6 @@ void main_game() {
   const int max_x = getmaxx(stdscr);
   const int max_y = getmaxy(stdscr);
   int list_some = 0;
-  std::string name = "";
   int currentQuestIndex;
   while (true) {
     currentQuestIndex = next_quest();
@@ -308,16 +312,33 @@ void main_game() {
     int currentQuestCurrentAmount =
         listing::all_parts[currentQuestRequiredPart].amount;
     check_current_quest_completion(currentQuestIndex);
+
     refresh();
     clear();
-    int row = max_y / 2;
+
+    // build visible list
+    std::vector<int> visibleIndices;
     for (int i = 0; i < listing::all_parts.size(); i++) {
+      if (listing::all_parts[i].unlocked) {
+        visibleIndices.push_back(i);
+      }
+    }
+
+    // draw only visible items
+    int row = max_y / 2;
+    for (int i = 0; i < (int)visibleIndices.size(); i++) {
+      int realIndex = visibleIndices[i];
       if (i == list_some)
         attron(A_REVERSE);
-      mvprintw(row + i, max_x / 2, "%s", listing::all_parts[i].name.c_str());
-      mvprintw(row + i, max_x / 2 + listing::all_parts[i].name.size() + 2, "%d",
-               listing::all_parts[i].amount);
-      attroff(A_REVERSE);
+
+      mvprintw(row + i, max_x / 2, "%s",
+               listing::all_parts[realIndex].name.c_str());
+      mvprintw(row + i,
+               max_x / 2 + listing::all_parts[realIndex].name.size() + 2, "%d",
+               listing::all_parts[realIndex].amount);
+
+      if (i == list_some)
+        attroff(A_REVERSE);
     }
 
     mvprintw(max_y / 2 - 7, 10,
@@ -343,14 +364,15 @@ void main_game() {
       return;
     case '\n':
     case KEY_ENTER:
-      auto &item = listing::all_parts[list_some];
+      int selectedIndex = visibleIndices[list_some];
+      auto &item = listing::all_parts[selectedIndex];
       if (item.craft) {
         auto it = std::find_if(
             crafting::recipes.begin(), crafting::recipes.end(),
             [&](auto &r) { return r.indexOfCraftedPart == list_some; });
         if (it != crafting::recipes.end() &&
             checkItemParts(it - crafting::recipes.begin())) {
-          startTyper(list_some);
+          startTyper(selectedIndex);
         } else {
           auto &ingredient1 = listing::all_parts[it->indexOfPart1];
           auto &ingredient2 = listing::all_parts[it->indexOfPart2];
@@ -363,15 +385,15 @@ void main_game() {
           getch();
         }
       } else
-        startTyper(list_some);
+        startTyper(selectedIndex);
       break;
       /*case ERR:
         break;*/
     }
     if (list_some < 0)
       list_some = 0;
-    if (list_some >= listing::all_parts.size())
-      list_some = listing::all_parts.size() - 1;
+    if (list_some >= (int)visibleIndices.size())
+      list_some = visibleIndices.size() - 1;
   }
 }
 
