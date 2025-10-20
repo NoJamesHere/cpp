@@ -373,7 +373,7 @@ void main_game() {
       if (item.craft) {
         auto it = std::find_if(
             crafting::recipes.begin(), crafting::recipes.end(),
-            [&](auto &r) { return r.indexOfCraftedPart == list_some; });
+            [&](auto &r) { return r.indexOfCraftedPart == selectedIndex; });
         if (it != crafting::recipes.end() &&
             checkItemParts(it - crafting::recipes.begin())) {
           startTyper(selectedIndex);
